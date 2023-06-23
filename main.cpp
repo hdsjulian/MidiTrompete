@@ -1,96 +1,149 @@
 #include <Arduino.h>
 #include <BLEMidi.h>
 #include "OneButton.h"
-#define BUTTON_VORNE_OBEN D8
-#define BUTTON_VORNE_UNTEN D7
-#define BUTTON_HINTEN_OBEN D10
-#define BUTTON_HINTEN_UNTEN D9
-const int buttonVorneOben = BUTTON_VORNE_OBEN;
-const int buttonVorneUnten = BUTTON_VORNE_UNTEN;
-const int buttonHintenOben = BUTTON_HINTEN_OBEN;
-const int buttonHintenUnten = BUTTON_HINTEN_UNTEN;
-OneButton ButtonVorneOben(buttonVorneOben, true);
-OneButton ButtonVorneUnten(buttonVorneUnten, true);
-OneButton ButtonHintenOben(buttonHintenOben, true);
-OneButton ButtonHintenUnten(buttonHintenUnten, true);
+#define BUTTON_FRONT_TOP D7
+#define BUTTON_FRONT_BOTTOM D8
+#define BUTTON_BACK_TOP D10
+#define BUTTON_BACK_BOTTOM D9
+#define POTI_TOP A0
+#define POTI_BOTTOM A1
+#define BUTTONS_FRONT 1
+#define BUTTONS_BACK 1
+#define POTIS_MIDDLE 1 
+
+const int buttonFrontTop = BUTTON_FRONT_TOP;
+const int buttonFrontBottom = BUTTON_FRONT_BOTTOM;
+const int buttonBackTop = BUTTON_BACK_TOP;
+const int buttonBackBottom = BUTTON_BACK_BOTTOM;
+OneButton ButtonFrontTop(buttonFrontTop, true);
+OneButton ButtonFrontBottom(buttonFrontBottom, true);
+OneButton ButtonBackTop(buttonBackTop, true);
+OneButton ButtonBackBottom(buttonBackBottom, true);
+const int potiTop = POTI_TOP;
 
 const uint8_t midi_channel = 1;
 const uint8_t controller_number = 0;
 
-int midicommands[][2] = {{16, 20}, {24, 25}, {26, 27}};
-int channel = 0;
+int midicommands_ft[][2] = {{16, 17}, {18, 19}, {20, 21}, {22, 23}};
+25,;26,27};
+int channel_ft = 0;
+int channel_bb = 0;
 
-void click_vo() {
-  BLEMidiServer.controlChange(midi_channel, midicommands[channel][0], 100);
+static int averageValue = 0;
+static int quantisiert = 0;
+static int hysteresis = 0;
+
+
+ftid click_ft() {
+  BLEMidiServer.controlChange(midi_channel, midicommands_ft[channel_ft][0], 100);
   delay(100);
-  BLEMidiServer.controlChange(midi_channel, midicommands[channel][0], 0);
+  BLEMidiServer.controlChange(midi_channel, midicommands_ft[channel_ft][0], 0);
   //Serial.println("VO");
 }
-void longclick_vo() {
-  BLEMidiServer.controlChange(midi_channel, midicommands[channel][1], 100);
+ftid longclick_ft() {
+  BLEMidiServer.controlChange(midi_channel, midicommands_ft[channel_ft][1], 100);
   delay(100);
-    BLEMidiServer.controlChange(midi_channel, midicommands[channel][1], 0);
+    BLEMidiServer.controlChange(midi_channel, midicommands_ft[channel_ft][1], 0);
     //Serial.println("VO");
 }
-void click_vu() {
-  BLEMidiServer.controlChange(midi_channel, 17, 100);
-  delay(100);
-  //Serial.println("VU");
-  BLEMidiServer.controlChange(midi_channel, 17, 0);
+ftid click_bb() {
+  BLEMidiServer.controlChange(midi_channel, midicommands_bb[channel_bb], 127);
+
 }
-void longclick_vu() {
-  BLEMidiServer.controlChange(midi_channel, 21, 100);
-  delay(100);
-    BLEMidiServer.controlChange(midi_channel, 21, 0);
+ftid longclick_bb() {
+    BLEMidiServer.controlChange(midi_channel, midicommands_bb[channel_bb], 0);
     //Serial.println("VO");
 }
-void click_ho() {
-  if (channel <3) {
-    channel++;
+ftid doubleclick_ft() {
+  if (channel_ft <3) {
+    channel_ft++;
+    BLEMidiServer.noteOn(0, 60, 100+channel_ft);
   }
 }
-void longclick_ho() {
-  if (channel > 0) {
-    channel--;
+ftid doubleclick_bt() {
+  if (channel_ft > 0) {
+    channel_ft--;
+    BLEMidiServer.noteOn(0, 60, 100+channel_ft);
   }
 }
 
-void click_hu() {
-  BLEMidiServer.controlChange(midi_channel, 19, 100);
+ftid doubleclick_bb() {
+  if (channel_bb <3) {
+    channel_bb++;
+    BLEMidiServer.noteOn(0, 61, 100+channel_bb);
+  }
+}
+ftid doubleclick_bt() {
+  if (channel_bb > 0) {
+    channel_bb--;
+    BLEMidiServer.noteOn(0, 61, 100+channel_bb);
+  }
+}
+
+ftid click_bt() {
+  BLEMidiServer.controlChange(midi_channel, 28, 100);
   delay(100);
-  BLEMidiServer.controlChange(midi_channel, 19, 0);
+  BLEMidiServer.controlChange(midi_channel, 28, 0);
 //Serial.println("HU");
 }
-void longclick_hu() {
-  BLEMidiServer.controlChange(midi_channel, 23, 100);
+ftid longclick_bt() {
+  BLEMidiServer.controlChange(midi_channel, 29, 100);
   delay(100);
-    BLEMidiServer.controlChange(midi_channel, 23, 0);
+    BLEMidiServer.controlChange(midi_channel, 29, 0);
+    //Serial.println("VO");
+}
+
+ftid click_bt() {
+  BLEMidiServer.controlChange(midi_channel, 30, 100);
+  delay(100);
+  BLEMidiServer.controlChange(midi_channel, 30, 0);
+//Serial.println("HU");
+}
+ftid longclick_bt() {
+  BLEMidiServer.controlChange(midi_channel, 31, 100);
+  delay(100);
+    BLEMidiServer.controlChange(midi_channel, 31, 0);
     //Serial.println("VO");
 }
 
 
-void setup() {
+ftid setup() {
   //Serial.begin(115200);
   //Serial.println("Initializing bluetooth");
   BLEMidiServer.begin("Basic MIDI device");
   //Serial.println("Waiting for connections...");
   BLEMidiServer.enableDebugging();  // Uncomment if you want to see some debugging output from the library
-  ButtonVorneOben.attachClick(click_vo);
-  ButtonVorneUnten.attachClick(click_vu);
-  ButtonHintenOben.attachClick(click_ho);
-  ButtonHintenUnten.attachClick(click_hu);
-  ButtonVorneOben.attachLongPressStart(longclick_vo);
-  ButtonVorneUnten.attachLongPressStart(longclick_vu);
-  ButtonHintenOben.attachLongPressStart(longclick_ho);
-  ButtonHintenUnten.attachLongPressStart(longclick_hu);
+  ButtonFrontTop.attachClick(click_ft);
+  ButtonFrontBottom.attachClick(click_bb);
+  ButtonBackTop.attachClick(click_bt);
+  ButtonBackBottom.attachClick(click_bt);
+  ButtonFrontTop.attachLongPressStart(longclick_ft);
+  ButtonFrontBottom.attachLongPressStart(longclick_bb);
+  ButtonBackTop.attachLongPressStart(longclick_bt);
+  ButtonBackBottom.attachLongPressStart(longclick_bt);
+  ButtonFrontTop.attachDoubleClick(doubleclick_ft);
+  ButtonFrontBottom.attachDoubleClick(doubleclick_bb);
+  ButtonBackTop.attachDoubleClick(doubleclick_bt);
+  ButtonBackBottom.attachDoubleClick(doubleclick_bt);
 }
 
-void loop() {
+ftid loop() {
   if(BLEMidiServer.isConnected()) {             // If we've got a connection, we send an A4 during one second, at full velocity (127)
-    ButtonVorneOben.tick();
-    ButtonVorneUnten.tick();
-    ButtonHintenOben.tick();
-    ButtonHintenUnten.tick();
-    delay(10);
+  if (BUTTONS_FRONT == 1) {
+    ButtonFrontTop.tick();
+    ButtonFrontBottom.tick();
+  }
+  if (BUTTONS_BACK == 1) {
+    ButtonBackTop.tick();
+    ButtonBackBottom.tick();
+  }
+  if (POTIS_FRONT == 1) { 
+    int sensorValue = analogRead(potiTop)/32;
+    averageValue = (averageValue * 7 + sensorValue) / 8;  //cheap lowpass
+    if (abs(hysteresis-averageValue) > 8){
+      hysteresis = averageValue;
+      BLEMidiServer.controlChange(midi_channel, 17, hysteresis);
+    }
+  }
   }
 }
