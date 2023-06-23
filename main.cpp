@@ -20,18 +20,19 @@ OneButton ButtonFrontBottom(buttonFrontBottom, true);
 OneButton ButtonBackTop(buttonBackTop, true);
 OneButton ButtonBackBottom(buttonBackBottom, true);
 const int potiTop = POTI_TOP;
+const int potiBottom = POTI_BOTTOM;
 
 const uint8_t midi_channel = 1;
-const uint8_t controller_number = 0;
 
 int midicommands_ft[][2] = {{16, 17}, {18, 19}, {20, 21}, {22, 23}};
 25,;26,27};
 int channel_ft = 0;
 int channel_bb = 0;
 
-static int averageValue = 0;
-static int quantisiert = 0;
-static int hysteresis = 0;
+static int averageValue_pt = 0;
+static int averageValue_pb = 0;
+static int hysteresis_pt = 0;
+static int hysteresis_pb = 0;
 
 
 ftid click_ft() {
@@ -137,12 +138,18 @@ ftid loop() {
     ButtonBackTop.tick();
     ButtonBackBottom.tick();
   }
-  if (POTIS_FRONT == 1) { 
-    int sensorValue = analogRead(potiTop)/32;
-    averageValue = (averageValue * 7 + sensorValue) / 8;  //cheap lowpass
-    if (abs(hysteresis-averageValue) > 8){
-      hysteresis = averageValue;
-      BLEMidiServer.controlChange(midi_channel, 17, hysteresis);
+  if (POTIS_MIDDLE == 1) { 
+    int sensorValue_pt = analogRead(potiTop)/32;
+    averageValue_pt = (averageValue_pt * 7 + sensorValue_pt) / 8;  //cheap lowpass
+    if (abs(hysteresis_pt-averageValue_pt) > 8){
+      hysteresis_pt = averageValue_pt;
+      BLEMidiServer.controlChange(midi_channel, 11, hysteresis_pt);
+    }
+    int sensorValue_pb = analogRead(potiBottom)/32;
+    averageValue_pb = (averageValue_pt * 7 + sensorValue_pb) / 8;  //cheap lowpass
+    if (abs(hysteresis_pb-averageValue_pb) > 8){
+      hysteresis_pb = averageValue_pb;
+      BLEMidiServer.controlChange(midi_channel, 12, hysteresis_pb);
     }
   }
   }
