@@ -17,35 +17,55 @@ OneButton ButtonHintenUnten(buttonHintenUnten, true);
 const uint8_t midi_channel = 1;
 const uint8_t controller_number = 0;
 
+int midicommands[][2] = {{16, 20}, {24, 25}, {26, 27}};
+int channel = 0;
+
 void click_vo() {
-  BLEMidiServer.controlChange(midi_channel, 16, 100);
-  delay(10);
-  BLEMidiServer.controlChange(midi_channel, 16, 0);
+  BLEMidiServer.controlChange(midi_channel, midicommands[channel][0], 100);
+  delay(100);
+  BLEMidiServer.controlChange(midi_channel, midicommands[channel][0], 0);
   //Serial.println("VO");
 }
 void longclick_vo() {
-  BLEMidiServer.controlChange(midi_channel, 20, 100);
-  delay(10);
-    BLEMidiServer.controlChange(midi_channel, 20, 0;
+  BLEMidiServer.controlChange(midi_channel, midicommands[channel][1], 100);
+  delay(100);
+    BLEMidiServer.controlChange(midi_channel, midicommands[channel][1], 0);
     //Serial.println("VO");
 }
 void click_vu() {
   BLEMidiServer.controlChange(midi_channel, 17, 100);
-  delay(10);
+  delay(100);
   //Serial.println("VU");
   BLEMidiServer.controlChange(midi_channel, 17, 0);
 }
-void click_ho() {
-  BLEMidiServer.controlChange(midi_channel, 18, 100);
-  delay(10);
-  BLEMidiServer.controlChange(midi_channel, 18, 0);
-//Serial.println("HO");
+void longclick_vu() {
+  BLEMidiServer.controlChange(midi_channel, 21, 100);
+  delay(100);
+    BLEMidiServer.controlChange(midi_channel, 21, 0);
+    //Serial.println("VO");
 }
+void click_ho() {
+  if (channel <3) {
+    channel++;
+  }
+}
+void longclick_ho() {
+  if (channel > 0) {
+    channel--;
+  }
+}
+
 void click_hu() {
   BLEMidiServer.controlChange(midi_channel, 19, 100);
-  delay(10);
+  delay(100);
   BLEMidiServer.controlChange(midi_channel, 19, 0);
 //Serial.println("HU");
+}
+void longclick_hu() {
+  BLEMidiServer.controlChange(midi_channel, 23, 100);
+  delay(100);
+    BLEMidiServer.controlChange(midi_channel, 23, 0);
+    //Serial.println("VO");
 }
 
 
@@ -60,6 +80,9 @@ void setup() {
   ButtonHintenOben.attachClick(click_ho);
   ButtonHintenUnten.attachClick(click_hu);
   ButtonVorneOben.attachLongPressStart(longclick_vo);
+  ButtonVorneUnten.attachLongPressStart(longclick_vu);
+  ButtonHintenOben.attachLongPressStart(longclick_ho);
+  ButtonHintenUnten.attachLongPressStart(longclick_hu);
 }
 
 void loop() {
